@@ -4,7 +4,7 @@ self contained wordpress site
 this repository is a set of docker container working together to serve a wordpress website.
 
  * Services architecture :
-
+```
 > |-------|  |------------|  |---------|
 > |  db   |  | wordpress  |  |  server |-exposes port 8080:80
 > |       |  |4.7.2-php7.1|  |         |
@@ -17,6 +17,7 @@ this repository is a set of docker container working together to serve a wordpre
 >                                  :
 >                                 nginx/conf.d/* 
 >                                 nginx/nginx.conf
+```
 
  * website content
 
