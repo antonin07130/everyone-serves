@@ -1,0 +1,52 @@
+version: '2'
+
+
+services:
+  db:
+    image: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD="Ento333"
+    networks:
+      - lan_wpdb
+    volumes:
+      - vol_wpdb:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:4.7.2-php7.1-fpm-alpine
+    environment:
+      - WORDPRESS_DB_PASSWORD="Ento333"
+      - WORDPRESS_DB_HOST=db:3306
+    volumes:
+      - ./www/html:/var/www/html:rw
+    networks:
+      - lan_wpdb
+      - lan_server
+
+  server:
+    image: nginx
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
+      - .nginx.conf:/etc/nginx/nginx.conf.d:ro
+      - ./www/html:/var/www/html:ro
+    ports : 
+      - 8080:80
+    networks:
+      - lan_server
+
+#  php:
+#    image: php:fpm
+#    networks:
+#      - lan_wpdb
+#    volumes:
+#      - ./www:/var/www
+
+
+volumes:
+  vol_wpdb:
+    driver: local
+  vol_wp:
+    driver: local
+
+networks:
+  lan_wpdb:
+  lan_server:
