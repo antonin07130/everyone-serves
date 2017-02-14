@@ -4,6 +4,7 @@ version: '2'
 services:
   db:
     image: mariadb
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD="Ento333"
     networks:
@@ -11,18 +12,62 @@ services:
     volumes:
       - vol_wpdb:/var/lib/mysql
 
-  wordpress:
+  wordpress_ento:
+    depends_on:
+      - db
     image: wordpress:4.7.2-php7.1-fpm-alpine
+    restart: always
+    working_dir: /var/www/html/ento
     environment:
+      - WORDPRESS_TABLE_PREFIX=ento_wp
       - WORDPRESS_DB_PASSWORD="Ento333"
       - WORDPRESS_DB_HOST=db:3306
     volumes:
-      - ./www/html:/var/www/html:rw
+      - ./www/html/ento:/var/www/html/ento:rw
     networks:
       - lan_wpdb
       - lan_server
 
+  wordpress_kawale:
+    depends_on:
+      - db
+    image: wordpress:4.7.2-php7.1-fpm-alpine
+    restart: always
+    working_dir: /var/www/html/kawale
+    environment:
+      - WORDPRESS_TABLE_PREFIX=kawale_wp
+      - WORDPRESS_DB_PASSWORD="Ento333"
+      - WORDPRESS_DB_HOST=db:3306
+    volumes:
+      - ./www/html/kawale:/var/www/html/kawale:rw
+    networks:
+      - lan_wpdb
+      - lan_server
+
+#  gitlab:
+#    depends_on:
+#      - server
+#    image: 'gitlab/gitlab-ce:latest'
+#    restart: always
+#    hostname: 'gitlab.localhost'
+#    environment:     GITLAB_OMNIBUS_CONFIG: |
+#      external_url 'http://gitlab.localhost'
+#    ports:
+#      - '80:80'
+#      - '443:443'
+#      - '22:22'
+#    volumes:
+#      - ./gitlab/config:/etc/gitlab
+#      - '/srv/gitlab/logs:/var/log/gitlab'
+#      - '/srv/gitlab/data:/var/opt/gitlab'
+#    networks:
+#      - lan_server
+
+
   server:
+    depends_on:
+      - wordpress_kawale
+      - wordpress_ento
     image: nginx
     volumes:
       - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
@@ -45,6 +90,8 @@ volumes:
   vol_wpdb:
     driver: local
   vol_wp:
+    driver: local
+  vol_gitlab:
     driver: local
 
 networks:
