@@ -44,30 +44,37 @@ services:
       - lan_wpdb
       - lan_server
 
-#  gitlab:
-#    depends_on:
-#      - server
-#    image: 'gitlab/gitlab-ce:latest'
-#    restart: always
-#    hostname: 'gitlab.localhost'
-#    environment:     GITLAB_OMNIBUS_CONFIG: |
-#      external_url 'http://gitlab.localhost'
-#    ports:
-#      - '80:80'
-#      - '443:443'
-#      - '22:22'
-#    volumes:
-#      - ./gitlab/config:/etc/gitlab
-#      - '/srv/gitlab/logs:/var/log/gitlab'
-#      - '/srv/gitlab/data:/var/opt/gitlab'
-#    networks:
-#      - lan_server
+
+
+        
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    #   domainname: 'kawale.org'
+    #   hostname: 'gitlab'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.kawale.org'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22:22'
+    volumes:
+      - ./gitlab:/etc/gitlab
+      - vol_gitlab_logs:/var/log/gitlab
+      - vol_gitlab_contents:/var/opt/gitlab
+    networks:
+      - lan_server
+
+
 
 
   server:
+    restart: always
     depends_on:
       - wordpress_kawale
       - wordpress_ento
+      - gitlab
     image: nginx
     volumes:
       - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
@@ -78,21 +85,17 @@ services:
     networks:
       - lan_server
 
-#  php:
-#    image: php:fpm
-#    networks:
-#      - lan_wpdb
-#    volumes:
-#      - ./www:/var/www
-
 
 volumes:
   vol_wpdb:
     driver: local
   vol_wp:
     driver: local
-  vol_gitlab:
+  vol_gitlab_logs:
     driver: local
+  vol_gitlab_contents:
+    driver: local
+
 
 networks:
   lan_wpdb:

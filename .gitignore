@@ -1,0 +1,12 @@
+gitlab/*
+!gitlab/gitlab.rb
+
+www/*
+www/html/kawale/*
+www/html/ento/*
+!www/html/ento
+!www/html/kawale
+
+
+# VIM temp files
+*.swp
