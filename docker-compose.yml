@@ -55,10 +55,16 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.kawale.org'
-    ports:
-      - '80:80'
-      - '443:443'
-      - '22:22'
+        nginx['listen_https'] = false
+        nginx['proxy_set_headers'] = {
+          "X-Forwarded-Proto" => "https",
+          "X-Forwarded-Ssl" => "on"
+        }
+        nginx['listen_port'] = 80   
+    #ports:
+    #  - '80:80'
+    #  - '443:443'
+    #  - '22:22'
     volumes:
       - ./gitlab:/etc/gitlab
       - vol_gitlab_logs:/var/log/gitlab
@@ -74,16 +80,45 @@ services:
     depends_on:
       - wordpress_kawale
       - wordpress_ento
-      - gitlab
+    #  - gitlab
+    #  -letsencrypt
     image: nginx
     volumes:
       - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
       - .nginx.conf:/etc/nginx/nginx.conf.d:ro
       - ./www/html:/var/www/html:ro
-    ports : 
-      - 8080:80
+      - vol_letsencrypt_certs:/etc/letsencrypt
+      - vol_letsencrypt_www:/var/lib/letsencrypt/www
+    ports: 
+      - 80:80
+      - 443:443
     networks:
       - lan_server
+
+
+  temp_certs:
+    build: 
+      context: ./dockerfile/letsencrypt
+      dockerfile: Dockerfile
+    image: temp_certs
+    command: /bin/true
+    volumes:
+      - vol_letsencrypt_certs:/etc/letsencrypt
+      - vol_letsencrypt_www:/var/lib/letsencrypt/www
+
+  letsencrypt:
+    image:  quay.io/letsencrypt/letsencrypt:latest
+    command: certonly --noninteractive --agree-tos --verbose --config /etc/letsencrypt/cli.ini
+    volumes:
+      - ./letsencrypt/cli.ini:/etc/letsencrypt/cli.ini
+      - vol_letsencrypt_certs:/etc/letsencrypt
+      - vol_letsencrypt_www:/var/lib/letsencrypt/www
+    networks:
+      lan_server:
+        aliases:
+          - letsencrypt
+    environment:
+      - TERM=xterm
 
 
 volumes:
@@ -95,7 +130,10 @@ volumes:
     driver: local
   vol_gitlab_contents:
     driver: local
-
+  vol_letsencrypt_certs:
+    driver: local
+  vol_letsencrypt_www:
+    driver: local
 
 networks:
   lan_wpdb:
