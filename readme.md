@@ -6,24 +6,25 @@ this repository is a set of docker container working together to serve 2 wordpre
  * Services architecture :
 ```
 
->                        |---------|                       |-------------| |-------------|
->    ./nginx/conf.d/* +++|  server |-exposes port 8080:80  | letsencrypt | | temt_certs  |
->    ./nginx/nginx.conf +|         |                       |             | |             |
->                        |  nginx  |                       | letsencrypt | | dockerfile/ |
->                        |---------|                       |-------------| |letsencrypt/ |
->                          |  +  +                             |      +    |Dockerfile   |
->                          |  +  +++++++++++++++++++++++++++++++++++  +    |-------------|
->                   ----lan_server-----------------------------|   +  +        +
->                   |         +      |               |             +  +        +
+>                        |---------|                       |-------------| 
+>    ./nginx/conf.d/* +++|  server |-exposes port 8080:80  | letsencrypt |
+>    ./nginx/nginx.conf +|         |                       |             |
+>                        |  nginx  |                       | letsencrypt |
+>                        |---------|                       |-------------|
+>                          |  +  +                             |      +   
+>                          |  +  +++++++++++++++++++++++++++++++++++  +   
+>                   ----lan_server-----------------------------|   +  +
+>                   |         +      |               |             +  +
 > |-------|  |------------|   + |------------|    |---------|      vol_letsencrypt_certs
 > |  db   |  | wordpress  |   + | wordpress  |    | gitlab  |      vol_letsencrypt_www
 > |       |  |4.7.2-php7.1|   + |4.7.2-php7.1|    |         |
 > |mariadb|  |-fpm-alpine |   + |-fpm-alpine |    |         |
 > |-------|  |------------|   + |------------|    |---------|
->   + |        + |            +   | +
->   + |-lan_wpdb-|----------------| + 
->   +          +              +     +
+>   +  |             | +      +   | +
+>   +  |--lan_wpdb---|------------| + 
+>   +                  +      +     +
 >  vol_wpdb   ./www/html/ento +    ./www/html/kawale
+>                             +
 >                           ./www/html/    
 >                                  
 >                                 
@@ -44,7 +45,8 @@ Are stored in vol_wpdb, only accessible to db container.
  * server
 
 Blog containers run a php-fpm service to serve dynamic php contents.
-The reverse proxy redirects appropriate requests to these servers.
+The reverse proxy redirects php requests to these servers.
+The reverse proxy deals directly with static content, serving it from ./www/html
 
 
 Gitlab
@@ -73,9 +75,12 @@ Main configuration file is nginx.conf.
 
 The server reads certificates from vol_letsencrypt_certs.
 
-2 containers are used to get certificates for reverse proxy :
- * temp_certs is a home made image that generates self signed certificates and stores them in vol_letsencrypt_certs.(without these, nginx reverse proxy refuses to start)
- * letsencrypt is the official letsencrypt image that gets signed certificates and stores them in vol_letsencrypt_certs replacing self signed certiicates. This replacement step does not work correctly yet.
+The letsencrypt container is responsible for generating certificates :
+1. At first, it generates temporary self signed certificates, for nginx to be able to start.
+2. It waits for 30 seconds and remove these temporary certificates.
+3. Finally, it starts letsencrypt bot and get these certificates
 
-The server serves specifically the .well-known/acme-challenge/ from vol_letsencrypt_www (populated by the letsencrypt container).
+
+The server redirects requests to .well-known/acme-challenge/ to letsencrypt image, for the certificate generator bot to intercept them.
+
 

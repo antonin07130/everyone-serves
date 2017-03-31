@@ -29,3 +29,17 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
  -out /etc/letsencrypt/live/gitlab.kawale.org/fullchain.pem \
  -subj /CN=gitlab.kawale.org
 
+
+# dirty sleep to let nginx start with fake certificates
+sleep 30
+
+# remove fake certificates
+rm -rf /etc/letsencrypt/live/gitlab.kawale.org
+rm -rf /etc/letsencrypt/live/www.ento.kawale.org
+rm -rf /etc/letsencrypt/live/www.kawale.org
+
+# start certbot certification process
+certbot certonly --noninteractive --agree-tos --verbose --config /gencerts/cli.ini
+
+
+

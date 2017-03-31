@@ -1,7 +1,14 @@
 version: '2'
 
 
+
 services:
+
+
+#########
+# Blogs #
+#########
+
   db:
     image: mariadb
     restart: always
@@ -46,12 +53,13 @@ services:
 
 
 
-        
+#################
+# Gitlab server #
+#################
+
   gitlab:
     image: 'gitlab/gitlab-ce:latest'
     restart: always
-    #   domainname: 'kawale.org'
-    #   hostname: 'gitlab'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.kawale.org'
@@ -61,10 +69,12 @@ services:
           "X-Forwarded-Ssl" => "on"
         }
         nginx['listen_port'] = 80   
-    #ports:
-    #  - '80:80'
-    #  - '443:443'
-    #  - '22:22'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2200
+        gitlab_rails['smtp_enable'] = false
+        gitlab_rails['gitlab_email_enabled'] = true
+        gitlab_rails['gitlab_email_from'] = 'gitlab@kawale.org'
+    ports:
+      - "2200:22"
     volumes:
       - ./gitlab:/etc/gitlab
       - vol_gitlab_logs:/var/log/gitlab
@@ -74,6 +84,9 @@ services:
 
 
 
+#################
+# Reverse Proxy #
+#################
 
   server:
     restart: always
@@ -96,21 +109,18 @@ services:
       - lan_server
 
 
-  temp_certs:
+
+###################################
+# letsencrypt signed certificates #
+###################################
+
+  letsencrypt:
     build: 
       context: ./dockerfile/letsencrypt
       dockerfile: Dockerfile
     image: temp_certs
     command: /bin/true
     volumes:
-      - vol_letsencrypt_certs:/etc/letsencrypt
-      - vol_letsencrypt_www:/var/lib/letsencrypt/www
-
-  letsencrypt:
-    image:  quay.io/letsencrypt/letsencrypt:latest
-    command: certonly --noninteractive --agree-tos --verbose --config /etc/letsencrypt/cli.ini
-    volumes:
-      - ./letsencrypt/cli.ini:/etc/letsencrypt/cli.ini
       - vol_letsencrypt_certs:/etc/letsencrypt
       - vol_letsencrypt_www:/var/lib/letsencrypt/www
     networks:
@@ -123,8 +133,6 @@ services:
 
 volumes:
   vol_wpdb:
-    driver: local
-  vol_wp:
     driver: local
   vol_gitlab_logs:
     driver: local

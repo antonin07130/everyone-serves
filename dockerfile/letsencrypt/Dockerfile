@@ -3,7 +3,7 @@ FROM debian:jessie-backports
 WORKDIR /gencerts/
 
 COPY ./gen_temp_certs.sh gen_temp_certs.sh
-
+COPY ./cli.ini cli.ini
  
 RUN apt-get update \
   && apt-get install -y letsencrypt -t jessie-backports \
