@@ -118,8 +118,6 @@ services:
     build: 
       context: ./dockerfile/letsencrypt
       dockerfile: Dockerfile
-    image: temp_certs
-    command: /bin/true
     volumes:
       - vol_letsencrypt_certs:/etc/letsencrypt
       - vol_letsencrypt_www:/var/lib/letsencrypt/www
