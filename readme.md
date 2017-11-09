@@ -1,3 +1,7 @@
+# Deprecated
+
+This repo was to play with docker and docker compose, if you need to serve several websites with a similar setup, head up to https://rancher.com or some similar soft which are really maintained and have some safety warranties.
+
 self contained wordpress site
 =============================
 
